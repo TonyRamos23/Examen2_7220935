@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "ApiExmane2": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7172",
+      "environmentVariables": {
+        "cadenaconexion": ""
+      }
+    }
+  }
+}
