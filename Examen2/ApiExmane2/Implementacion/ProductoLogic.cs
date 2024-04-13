@@ -1,5 +1,7 @@
-﻿using ApiExmane2.Contratos;
+﻿using ApiExmane2.Context;
+using ApiExmane2.Contratos;
 using Examen.Shared;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,29 +12,42 @@ namespace ApiExmane2.Implementacion
 {
     public class ProductoLogic : IProductoLogic
     {
-        public Task<bool> EliminarProducto(int id)
+        private readonly Contexto contexto;
+
+        public ProductoLogic(Contexto contexto)
         {
-            throw new NotImplementedException();
+            this.contexto = contexto;
+        }
+        public async Task<bool> InsertarProducto(Producto producto)
+        {
+            bool sw = false;
+            contexto.Productos.Add(producto);
+            int response = await contexto.SaveChangesAsync();
+            if (response == 1)
+            {
+                sw = true;
+            }
+            return sw;
         }
 
-        public Task<bool> InsertarProducto(Producto producto)
+        public async Task<List<Producto>> ListarProductos()
         {
-            throw new NotImplementedException();
+            var lista = await contexto.Productos.ToListAsync();
+            return lista;
         }
 
-        public Task<List<Producto>> ListarProductoTodos()
+        public async Task<List<Producto>> ListarProductosFechas(DateTime fecha1, DateTime fecha2)
         {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> ModificarProducto(Producto producto, int id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Producto> ObtenerProductoById(int id)
-        {
-            throw new NotImplementedException();
+            var lista = await contexto.Detalles
+            .Where(x => x.Pedido!.Fecha >= fecha1 && x.Pedido.Fecha <= fecha2)
+            .OrderByDescending(y => y.Cantidad)
+            .Select(prod => new Producto
+            {
+                IdProducto = prod.Producto!.IdProducto,
+                Nombre = prod.Producto.Nombre
+            })
+            .ToListAsync();
+            return lista;
         }
     }
 }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace Examen.Shared
 {
     public class Detalle
@@ -14,9 +15,9 @@ namespace Examen.Shared
        public int IdDetalle { get; set; }
         public int IdPedido { get; set; }
         public int IdProducto { get; set;}
-        public string Cantidad { get; set; }
-        public int Precio { get; set; }
-        public string Subtotal { get; set;}
+        public int Cantidad { get; set; }
+        public double Precio { get; set; }
+        public double Subtotal { get; set;}
 
         [ForeignKey("IdPedido")]
         public virtual Pedido? Pedido { get; set; } = null!;

@@ -1,4 +1,4 @@
-using ApiExmane2;
+using ApiExmane2.Context;
 using ApiExmane2.Contratos;
 using ApiExmane2.Implementacion;
 using Examen.Shared;
@@ -21,6 +21,8 @@ var host = new HostBuilder()
         services.ConfigureFunctionsApplicationInsights();
         services.AddDbContext<Contexto>(options => options.UseSqlServer(
                      configuration.GetConnectionString("cadenaConexion")));
+
+
         services.AddTransient<IClienteLogic, ClienteLogic>();
         services.AddTransient<IPedidoLogic, PedidoLogic>();
         services.AddTransient<IDetalleLogic, DetalleLogic>();

@@ -20,17 +20,7 @@ namespace ApiExmane2.Implementacion
             throw new NotImplementedException();
         }
 
-        public Task<List<Detalle>> ListarDetalleTodos()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> ModificarDetalle(Detalle detalle, int id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Detalle> ObtenerDetalleById(int id)
+        public Task<List<Detalle>> ListarDetalle()
         {
             throw new NotImplementedException();
         }

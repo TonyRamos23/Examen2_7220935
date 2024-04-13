@@ -1,5 +1,7 @@
-﻿using ApiExmane2.Contratos;
+﻿using ApiExmane2.Context;
+using ApiExmane2.Contratos;
 using Examen.Shared;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,17 +14,33 @@ namespace ApiExmane2.Implementacion
     public class ClienteLogic : IClienteLogic
     {
         private readonly Contexto contexto;
-
-        public ClienteLogic(Contexto contexto)
+        public ClienteLogic(Contexto _contexto)
         {
-            this.contexto = contexto;
+            this.contexto = _contexto;
         }
-        public async Task<bool> EliminarCliente(int id)
+        public async Task<bool> EliminarCliente(int IdCliente)
         {
             bool sw = false;
-            Cliente existe = await contexto.Clientes.FindAsync(id);
+            Cliente? existe = await contexto.Clientes.FindAsync(IdCliente);
             if (existe != null)
             {
+                var existeListaPedidos = await contexto.Pedidos.Where(x => x.IdCliente == existe.IdCliente).ToListAsync();
+                if (existeListaPedidos != null)
+                {
+                    foreach (var pedido in existeListaPedidos)
+                    {
+                        var existeDetalle = await contexto.Detalles.Where(x => x.IdPedido == pedido.IdPedido).ToListAsync();
+                        if (existeDetalle != null)
+                        {
+                            foreach (var detalle in existeDetalle)
+                            {
+                                contexto.Detalles.Remove(detalle);
+                            }
+                        }
+                        contexto.Pedidos.Remove(pedido);
+                    }
+                }
+
                 contexto.Clientes.Remove(existe);
                 await contexto.SaveChangesAsync();
                 sw = true;
@@ -30,53 +48,22 @@ namespace ApiExmane2.Implementacion
             return sw;
         }
 
-        public Task<bool> InsertarCliente(Cliente cliente)
+        public async Task<bool> InsertarCliente(Cliente cliente)
         {
-            throw new NotImplementedException();
+            bool sw = false;
+            contexto.Clientes.Add(cliente);
+            int response = await contexto.SaveChangesAsync();
+            if (response == 1)
+            {
+                sw = true;
+            }
+            return sw;
         }
 
-        public Task<List<Cliente>> ListarClienteTodos()
+        public async Task<List<Cliente>> ListarClientes()
         {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> ModificarCliente(Cliente cliente, int id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Cliente> ObtenerClienteById(int id)
-        {
-            throw new NotImplementedException();
-        }
-
-
-        private readonly IPedidoLogic _pedidoRepository;
-        private readonly IProductoLogic _productoRepository;
-
-        public ClienteLogic(IPedidoLogic pedidoRepository, IProductoLogic productoRepository)
-        {
-            _pedidoRepository = pedidoRepository;
-            _productoRepository = productoRepository;
-        }
-        public IEnumerable<IClienteLogic.ReporteItem> ObtenerReporte(Task<List<Pedido>> pedidos)
-        {
-            var pedidos = _pedidoRepository.ListarPedidoTodos(); // Método para obtener todos los pedidos
-            var productos = _productoRepository.ListarProductoTodos(); // Método para obtener todos los productos
-
-            // Lógica para generar el reporte
-            var reporte = from Pedido in pedidos
-                          from detalle in pedido.Detalles
-                          join producto in productos on detalle.ProductoId equals producto.ProductoId
-                          select new ReporteItem
-                          {
-                              NombreCliente = Pedido.Cliente.Nombre,
-                              FechaPedido = Pedido.Fecha,
-                              NombreProducto = producto.Nombre,
-                              Subtotal = detalle.Cantidad * producto.Precio
-                          };
-
-            return reporte;
+            var lista = await contexto.Clientes.ToListAsync();
+            return lista;
         }
     }
 }

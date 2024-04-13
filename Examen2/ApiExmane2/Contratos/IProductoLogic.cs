@@ -10,9 +10,7 @@ namespace ApiExmane2.Contratos
     public interface IProductoLogic
     {
         public Task<bool> InsertarProducto(Producto producto);
-        public Task<bool> ModificarProducto(Producto producto, int id);
-        public Task<bool> EliminarProducto(int id);
-        public Task<List<Producto>> ListarProductoTodos();
-        public Task<Producto> ObtenerProductoById(int id);
+        public Task<List<Producto>> ListarProductos();
+        public Task<List<Producto>> ListarProductosFechas(DateTime fecha1, DateTime fecha2);
     }
 }

@@ -1,24 +1,96 @@
+using ApiExmane2.Contratos;
+using Examen.Shared;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
+using System.Net;
 
 namespace ApiExmane2.Endpoint
 {
     public class ProductoFunction
     {
         private readonly ILogger<ProductoFunction> _logger;
+        private readonly IProductoLogic productoLogic;
 
-        public ProductoFunction(ILogger<ProductoFunction> logger)
+        public ProductoFunction(ILogger<ProductoFunction> logger, IProductoLogic productoLogic)
         {
             _logger = logger;
+            this.productoLogic = productoLogic;
         }
 
-        [Function("ProductoFunction")]
-        public IActionResult Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
+
+        [Function("ListarProductosRangosFecha")]
+        [OpenApiOperation("Listarspec", "ListarProductosRangosFecha", Description = "Sirve para listar todos los Productos")]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(List<Producto>), Description = "Mostrara una Lista de Producto")]
+        [OpenApiParameter(name: "fecha1", In = ParameterLocation.Path, Required = true, Type = typeof(DateTime))]
+        [OpenApiParameter(name: "fecha2", In = ParameterLocation.Path, Required = true, Type = typeof(DateTime))]
+        public async Task<HttpResponseData> ListarProductosRangosFecha([HttpTrigger(AuthorizationLevel.Function, "get", Route = "ListarProductosRangosFecha/{fecha1}/{fecha2}")] HttpRequestData req, DateTime fecha1, DateTime fecha2)
         {
-            _logger.LogInformation("C# HTTP trigger function processed a request.");
-            return new OkObjectResult("Welcome to Azure Functions!");
+            try
+            {
+                var listaIdiomas = productoLogic.ListarProductosFechas(fecha1, fecha2);
+                var respuesta = req.CreateResponse(HttpStatusCode.OK);
+                await respuesta.WriteAsJsonAsync(listaIdiomas.Result);
+                return respuesta;
+            }
+            catch (Exception e)
+            {
+
+                var error = req.CreateResponse(HttpStatusCode.InternalServerError);
+                await error.WriteAsJsonAsync(e.Message);
+                return error;
+            }
+        }
+
+        [Function("ListarProductos")]
+        [OpenApiOperation("Listarspec", "ListarProductos", Description = "Sirve para listar todos los Productos")]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(List<Producto>), Description = "Mostrara una Lista de Producto")]
+        public async Task<HttpResponseData> ListarProductos([HttpTrigger(AuthorizationLevel.Function, "get", Route = "ListarProductos")] HttpRequestData req)
+        {
+            try
+            {
+                var listaIdiomas = productoLogic.ListarProductos();
+                var respuesta = req.CreateResponse(HttpStatusCode.OK);
+                await respuesta.WriteAsJsonAsync(listaIdiomas.Result);
+                return respuesta;
+            }
+            catch (Exception e)
+            {
+
+                var error = req.CreateResponse(HttpStatusCode.InternalServerError);
+                await error.WriteAsJsonAsync(e.Message);
+                return error;
+            }
+        }
+
+        [Function("InsertarProducto")]
+        [OpenApiOperation("Insertarspec", "InsertarProducto", Description = "Sirve para Insertar un Producto")]
+        [OpenApiRequestBody("application/json", typeof(Producto), Description = "Producto modelo")]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(Producto), Description = "Mostrara el Producto Creado")]
+        public async Task<HttpResponseData> InsertarProducto([HttpTrigger(AuthorizationLevel.Function, "post", Route = "InsertarProducto")] HttpRequestData req)
+        {
+            try
+            {
+                var producto = await req.ReadFromJsonAsync<Producto>() ?? throw new Exception("Debe ingresar un Producto con todos sus datos");
+                bool seGuardo = await productoLogic.InsertarProducto(producto);
+                if (seGuardo)
+                {
+                    var respuesta = req.CreateResponse(HttpStatusCode.OK);
+                    return respuesta;
+                }
+                return req.CreateResponse(HttpStatusCode.BadRequest);
+            }
+            catch (Exception e)
+            {
+
+                var error = req.CreateResponse(HttpStatusCode.InternalServerError);
+                await error.WriteAsJsonAsync(e.Message);
+                return error;
+            }
         }
     }
 }

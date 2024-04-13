@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
+
 namespace Examen.Shared
 {
     public class Pedido
@@ -14,10 +16,13 @@ namespace Examen.Shared
         public int IdPedido { get; set; }
         public int IdCliente { get; set; }
         public DateTime Fecha { get; set; }
-        public int Total { get; set; }
+        public double Total { get; set; }
 
         [StringLength(maximumLength: 20)]
         public string Estado { get; set; }
+
+
+        public virtual ICollection<Detalle>? Detalles { get; set; } = new List<Detalle>();
 
         [ForeignKey("IdCliente")]
         public virtual Cliente? Cliente { get; set; } = null!;
